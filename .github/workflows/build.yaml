@@ -1,0 +1,20 @@
+name: Build
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: macos-11
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '1.17.4'
+    - run: env GOOS=darwin GOARCH=amd64 go build
+    - run: upx oidc-cli
+    - run: mv oidc-cli oidc-cli_darwin_amd64
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/v')
+      with:
+        files: oidc-cli_darwin_amd64
