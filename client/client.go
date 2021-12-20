@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/url"
 	"strings"
@@ -18,6 +19,29 @@ type OpenIdConfiguration struct {
 
 type Realm struct {
 	OpenIdConfigurationEndpoint string
+	openIdConfiguration         *OpenIdConfiguration
+}
+
+func (realm *Realm) NewRealm(openIdConfigurationEndpoint string) *Realm {
+	return &Realm{
+		OpenIdConfigurationEndpoint: openIdConfigurationEndpoint,
+	}
+}
+
+func (realm *Realm) LoadConfiguration() error {
+	var openIdConfiguration OpenIdConfiguration
+	restClient := resty.New()
+
+	if _, err := restClient.R().
+		EnableTrace().
+		SetResult(&openIdConfiguration).
+		Get(realm.OpenIdConfigurationEndpoint); err != nil {
+		return err
+	}
+
+	realm.openIdConfiguration = &openIdConfiguration
+
+	return nil
 }
 
 func (realm *Realm) NewClient() *Client {
@@ -30,28 +54,33 @@ type Client struct {
 	Realm *Realm
 }
 
-func (client *Client) GetAuthorizationEndpoint(
+func (client *Client) GetAuthorizationUrl(
 	clientId string,
 	redirectUri string,
 	nonce string,
-) string {
-	var openIdConfiguration OpenIdConfiguration
-	restClient := resty.New()
+) (string, error) {
+	client.Realm.LoadConfiguration()
 
-	if _, err := restClient.R().EnableTrace().SetResult(&openIdConfiguration).Get(client.Realm.OpenIdConfigurationEndpoint); err != nil {
-		log.Fatalln(err)
+	if client.Realm.openIdConfiguration == nil {
+		return "", errors.New("authorization endpoint is not initialized.")
 	}
 
-	u, _ := url.Parse(openIdConfiguration.AuthorizationEndpoint)
+	authorizationEndpoint := client.Realm.openIdConfiguration.AuthorizationEndpoint
+	u, err := url.Parse(authorizationEndpoint)
+
+	if err != nil {
+		return "", err
+	}
+
 	query := u.Query()
 	query.Set("response_type", "id_token")
 	query.Set("client_id", clientId)
 	query.Set("redirect_uri", redirectUri)
 	query.Set("nonce", nonce)
 	u.RawQuery = query.Encode()
-	authorizationEndpoint := u.String()
+	authorizationUrl := u.String()
 
-	return authorizationEndpoint
+	return authorizationUrl, nil
 }
 
 func (client *Client) GetIdToken(
@@ -88,10 +117,14 @@ func (client *Client) GetIdToken(
 		}
 	})
 
-	authorizationEndpoint := client.GetAuthorizationEndpoint(clientId, redirectUri, nonce)
+	authorizationUrl, err := client.GetAuthorizationUrl(clientId, redirectUri, nonce)
+
+	if err != nil {
+		return "", err
+	}
 
 	if err := chromedp.Run(ctx,
-		chromedp.Navigate(authorizationEndpoint),
+		chromedp.Navigate(authorizationUrl),
 	); err != nil {
 		return "", err
 	}

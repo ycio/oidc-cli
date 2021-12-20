@@ -29,6 +29,10 @@ func main() {
 				OpenIdConfigurationEndpoint: opts.Endpoint,
 			}
 
+			if err := realm.LoadConfiguration(); err != nil {
+				log.Fatalln(err)
+			}
+
 			client := realm.NewClient()
 
 			var nonce string
