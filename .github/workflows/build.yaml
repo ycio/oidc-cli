@@ -11,10 +11,8 @@ jobs:
       with:
         go-version: '1.17.4'
     - run: env GOOS=darwin GOARCH=amd64 go build
-    - name: Compress binaries
-      uses: svenstaro/upx-action@v2
-      with:
-        file: oidc-cli
+    - run: brew install upx
+    - run: upx oidc-cli 
     - run: mv oidc-cli oidc-cli_darwin_amd64
     - name: Release
       uses: softprops/action-gh-release@v1
