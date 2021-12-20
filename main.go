@@ -1,25 +1,55 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
-	cli "ycio/oidc-cli/client"
+	"os"
+	"strings"
+	"time"
+	"ycio/oidc-cli/client"
+
+	"github.com/jessevdk/go-flags"
 )
 
 func main() {
-	realm := &cli.Realm{
-		OpenIdConfigurationEndpoint: "http://localhost:8090/auth/realms/realm-name/.well-known/openid-configuration",
-	}
+	osArgs := os.Args
 
-	client := realm.NewClient()
+	if len(osArgs) > 1 && osArgs[1] == "implict-flow" {
+		var opts struct {
+			Endpoint    string `short:"e" long:"endpoint" description:"Endpoint of well-know openid configuration" required:"true"`
+			ClientId    string `short:"c" long:"client-id" description:"Client id" required:"true"`
+			RedirectURI string `short:"r" long:"redirect-uri" description:"Redirect URI" required:"true"`
+			Nonce       string `short:"n" long:"nonce" description:"Nonce (optional)" required:"false"`
+		}
 
-	if token, err := client.GetIdToken(
-		"clientId",
-		"http://localhost:8080/auth",
-		"nonce123",
-	); err != nil {
-		log.Fatalln(err)
+		if _, err := flags.ParseArgs(&opts, osArgs[2:]); err != nil {
+		} else {
+			realm := &client.Realm{
+				OpenIdConfigurationEndpoint: opts.Endpoint,
+			}
+
+			client := realm.NewClient()
+
+			var nonce string
+
+			if strings.TrimSpace(opts.Nonce) == "" {
+				nonce = fmt.Sprint((time.Now().UnixNano()))
+			} else {
+				nonce = opts.Nonce
+			}
+
+			if token, err := client.GetIdToken(
+				opts.ClientId,
+				opts.RedirectURI,
+				nonce,
+			); err != nil {
+				log.Fatalln(err)
+			} else {
+				fmt.Println(token)
+			}
+		}
 	} else {
-		fmt.Println(token)
+		log.Fatalln(errors.New("incorrect or lack of subcommand"))
 	}
 }
