@@ -4,7 +4,7 @@
 
 ## Installation
 
-Download the program from [Release](https://github.com/ycio/oidc-cli/releases) page, rename it to `oidc-cli` and make it executable, e.g:
+Download the program from [Releases](https://github.com/ycio/oidc-cli/releases) page, rename it to `oidc-cli` and make it executable, e.g:
 
 ```
 mv oidc-cli_darwin_amd64 oidc-cli
