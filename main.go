@@ -15,7 +15,7 @@ import (
 func main() {
 	osArgs := os.Args
 
-	if len(osArgs) > 1 && osArgs[1] == "implict-flow" {
+	if len(osArgs) > 1 && osArgs[1] == "implicit-flow" {
 		var opts struct {
 			Endpoint    string `short:"e" long:"endpoint" description:"Endpoint of well-know openid configuration" required:"true"`
 			ClientId    string `short:"c" long:"client-id" description:"Client id" required:"true"`
