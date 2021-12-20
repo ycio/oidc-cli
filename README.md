@@ -25,6 +25,8 @@ Currently it supports fetch OIDC token via implicit flow.
 
 ### Fetch OIDC token via implicit flow
 
+> Note that Chrome must be installed.
+
 Given the open id configuration endpoint `http://localhost:8091/auth/realms/awesome-realms/.well-known/openid-configuration`, redirect uri `http://localhost:8080/auth` and client id `awesome-application`, run the following command to open Chrome and sign in for token printed to console:
 
 ```bash
