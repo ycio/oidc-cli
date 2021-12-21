@@ -1,4 +1,4 @@
-module ycio/oidc-cli
+module github.com/ycio/oidc-cli
 
 go 1.17
 

@@ -7,9 +7,9 @@ import (
 	"os"
 	"strings"
 	"time"
-	"ycio/oidc-cli/client"
 
 	"github.com/jessevdk/go-flags"
+	"github.com/ycio/oidc-cli/client"
 )
 
 func main() {
